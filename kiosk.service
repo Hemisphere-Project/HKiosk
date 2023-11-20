@@ -1,0 +1,15 @@
+[Unit]
+Description=Chromium Kiosk
+RequiresMountsFor=/run
+           
+[Service]
+Type=simple
+User=root
+
+# ExecStartPre=/bin/sleep 3
+ExecStart=/usr/local/bin/kiosk # --url http://localhost:8080 # see kiosk --help for more options
+ExecStop=/bin/pkill Xorg
+Restart=always
+           
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,85 @@
+#!/bin/bash
+
+# interactive only (prevent start over ssh)
+# [[ $- != *i* ]] && return
+
+DIR="$(dirname "$(readlink -f "$0")")"
+
+
+#
+# DEFAULT CONFIG
+#
+URL="https://hemisphere-project.com"
+ROTATE="0"      # 0, 90, 180, 270
+REFLECT="n"     # n, x, y, xy
+WINDOW=0        # 0, 1  
+NOCURSOR=""     # "", -nocursor
+
+#
+# CMD LINE OVERWRITE
+#
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    -u|--url)
+      URL="$2"
+      shift # past argument
+      shift # past value
+      ;;
+    -r|--rotate)
+      ROTATE="$2"
+      shift # past argument
+      shift # past value
+      ;;
+    -m|--reflect)
+      REFLECT="$2"
+      shift # past argument
+      shift # past value
+      ;;
+    -d|--devtools)
+      DEV=1
+      shift # past argument
+      ;;
+    -c|--nocursor)
+      NOCURSOR="-nocursor"
+      shift # past argument
+      ;;
+    -h|--help)
+      echo "Usage: kiosk [options]"
+      echo " "
+      echo "Options:"
+      echo "  -u, --url <url>        URL to load"
+      echo "  -r, --rotate <deg>     Rotate screen (0, 90, 180, 270)"
+      echo "  -m, --reflect <mode>   Reflect screen (n, x, y, xy)"
+      echo "  -c, --nocursor         Hide cursor"
+      echo "  -d, --devtools         Show devtools"
+      echo "  -h, --help             Show this help"
+      echo " "
+      shift # past argument
+      ;;
+    *)
+      echo "Unknown argument $1"
+      echo "See kiosk --help for more info."
+      exit 1
+      ;;
+  esac
+done
+
+
+LOADER_URL=file://${DIR}/loader.html#${URL}
+# exit 0
+
+# echo $URL
+# echo $ROTATE
+# echo $REFLECT
+# echo $WINDOW
+# echo $NOCURSOR
+# echo $LOADER_URL
+
+
+#INFO
+echo " "
+echo ".:: HKiosk ::."
+echo " "
+
+XAUTHORITY=/tmp/.Xauthority KIOSK_URL=$LOADER_URL KIOSK_ROTATE=$ROTATE KIOSK_REFLECT=$REFLECT KIOSK_DEV=$DEV startx -- $NOCURSOR
+logout

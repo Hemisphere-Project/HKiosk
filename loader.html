@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>KIOSK Loader</title>
+
+    <style>
+        body{
+            background-color: black;
+            color:green;
+            
+        }
+
+        #content {
+            text-align: center;
+            border: 1px solid #333;
+            padding: 20px;
+
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 260px;
+            height: 100px;
+            margin-left: -130px;
+            /* -1/2 width */
+            margin-top: -50px;
+            /* -1/2 height */
+        }
+
+        @keyframes c-inline-spinner-kf {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .c-inline-spinner,
+        .c-inline-spinner:before {
+            display: inline-block;
+            width: 11px;
+            height: 11px;
+            transform-origin: 50%;
+            border: 2px solid transparent;
+            border-color: green green transparent transparent;
+            border-radius: 50%;
+            content: "";
+            animation: linear c-inline-spinner-kf 900ms infinite;
+            position: relative;
+            vertical-align: inherit;
+            line-height: inherit;
+        }
+        .c-inline-spinner {
+            top: 3px;
+            margin: 0 3px;
+        }
+        .c-inline-spinner:before {
+            border-color: green green transparent transparent;
+            position: absolute;
+            left: -2px;
+            top: -2px;
+            border-style: solid;
+        }
+
+    </style>
+  </head>
+
+  <body>
+    <div id="content">
+        <div id="title">HKiosk</div>
+        <br />
+        <div id="url"></div>
+        <br />
+        <div id="logger"><i class="c-inline-spinner"></i></div>
+    </div>
+    
+
+    <script>
+        var url = window.location.hash.substr(1)
+        
+        function getStatus(url) 
+        {
+            if (url == "") {
+                document.getElementById("logger").innerHTML = "ERROR: No URL provided.."
+                return
+            }
+
+            
+            var request = new XMLHttpRequest();
+            request.onreadystatechange = function() {
+                if (request.readyState === 4)
+                {
+                    
+                    if (request.status == 200 || request.status == 301 || request.status == 304) {
+                        document.getElementById("logger").innerHTML = "OK"
+                        window.location.href = url;
+                    }
+                    else {
+                        document.getElementById("url").innerHTML = url
+                        document.getElementById("logger").innerHTML = "ERROR: " + request.status
+                        console.log(request)
+                    }
+                }
+            };
+            request.open("GET", url , true);
+            request.send(null);
+        }
+
+        getStatus(url)
+    </script>
+  </body>
+</html>

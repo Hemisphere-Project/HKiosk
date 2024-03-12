@@ -103,6 +103,7 @@
                         document.getElementById("url").innerHTML = url
                         document.getElementById("logger").innerHTML = "ERROR: " + request.status
                         console.log(request)
+			setTimeout(()=>{ location.reload() }, 2000)
                     }
                 }
             };

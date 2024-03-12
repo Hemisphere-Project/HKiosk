@@ -11,7 +11,7 @@ User=root
 # Set --url <url> and other optional arguments in /boot/kiosk.url
 # kiosk --help to see other optional arguments
 
-ExecStart=/bin/sh -c 'KIOSK_ARGS=$$(/usr/bin/grep -v "^#" /boot/kiosk.url | /usr/bin/tr "\n" " "); /usr/local/bin/kiosk $${KIOSK_ARGS}'
+ExecStart=/bin/sh -c 'KIOSK_ARGS=$$(/usr/bin/grep -v "^#" /boot/kiosk.url | /usr/bin/tr "\n" " " | /usr/bin/sed -e "s/<mac>/$$(/usr/bin/cat /data/var/drive-id)/"); /usr/local/bin/kiosk $${KIOSK_ARGS}'
 ExecStop=/bin/pkill Xorg
 Restart=always
            

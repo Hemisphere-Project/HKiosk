@@ -56,6 +56,8 @@ ln -sf "$BASEPATH/kiosk" /usr/local/bin/
 ln -sf "$BASEPATH/kiosk.service" /etc/systemd/system/
 systemctl daemon-reload
 
+cp "$BASEPATH/kiosk.url" /boot/
+
 FILE=/boot/starter.txt
 if test -f "$FILE"; then
 echo "## [hkiosk] Chromium kiosk

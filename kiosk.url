@@ -1,0 +1,10 @@
+# HKiosk
+# --url <url>        URL to load  
+# --rotate <deg>     Rotate screen (0, 90, 180, 270)
+# --reflect <mode>   Reflect screen (n, x, y, xy)
+# --nocursor         Hide cursor
+# --devtools         Show devtools (disable fullscreen)
+
+--url https://hemisphere-project.com --nocursor
+
+

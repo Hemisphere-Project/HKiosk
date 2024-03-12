@@ -7,7 +7,11 @@ Type=simple
 User=root
 
 # ExecStartPre=/bin/sleep 3
-ExecStart=/usr/local/bin/kiosk --url http://localhost:8080      # see kiosk --help for more options
+
+# Set --url <url> and other optional arguments in /boot/kiosk.url
+# kiosk --help to see other optional arguments
+
+ExecStart=/bin/sh -c 'KIOSK_ARGS=$$(/usr/bin/grep -v "^#" /boot/kiosk.url | /usr/bin/tr "\n" " "); /usr/local/bin/kiosk $${KIOSK_ARGS}'
 ExecStop=/bin/pkill Xorg
 Restart=always
            

@@ -7,7 +7,10 @@ Type=simple
 User=root
 
 # ExecStartPre=/bin/sleep 3
-ExecStart=/usr/local/bin/kiosk --url http://localhost:8080      # see kiosk --help for more options
+
+# see kiosk --help for more options
+ExecStart=/usr/local/bin/kiosk --url http://localhost:8080     
+
 ExecStop=/bin/pkill Xorg
 Restart=always
            

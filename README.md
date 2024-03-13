@@ -10,6 +10,7 @@ kiosk
     -m, --reflect <mode>   Reflect screen (n, x, y, xy)
     -c, --nocursor         Hide cursor
     -d, --devtools         Show devtools
+    -e, --extra <args>     Extra chromium flags           
     -h, --help             Show this help
 ```
 
@@ -25,11 +26,8 @@ You can start kiosk via command line, i.e.:
 ### Service
 Or you can run Kiosk as a service at boot:
 - First edit **kiosk.service** to tweak launch arguments (symlinked to **/etc/systemd/system/kiosk.service** at install)
+- Edit **/boot/kiosk.url** to tweak url and stuff 
 - Run ```systemctl daemon-reload```
 - Enable with ```systemctl enable kiosk```
 - Restart
 
-### Using with HPlayer3
-Note: HPlayer3 use HKiosk as a player.  
-In that case, HPlayer3 does starts HKiosk, so no need to enable the service launcher.  
-This allows HPlayer3 to fully control HKiosk start/stop status.

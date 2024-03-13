@@ -14,6 +14,7 @@ ROTATE="0"      # 0, 90, 180, 270
 REFLECT="n"     # n, x, y, xy
 WINDOW=0        # 0, 1  
 NOCURSOR=""     # "", -nocursor
+EXTRA=""        # ""
 
 #
 # CMD LINE OVERWRITE
@@ -43,6 +44,11 @@ while [[ $# -gt 0 ]]; do
       NOCURSOR="-nocursor"
       shift # past argument
       ;;
+    -e|--extra)
+      EXTRA="$2"
+      shift # past argument
+      shift # past value
+      ;;
     -h|--help)
       echo "Usage: kiosk [options]"
       echo " "
@@ -52,6 +58,7 @@ while [[ $# -gt 0 ]]; do
       echo "  -m, --reflect <mode>   Reflect screen (n, x, y, xy)"
       echo "  -c, --nocursor         Hide cursor"
       echo "  -d, --devtools         Show devtools"
+      echo "  -e, --extra <args>     Extra chromium flags"
       echo "  -h, --help             Show this help"
       echo " "
       shift # past argument
@@ -81,5 +88,5 @@ echo " "
 echo ".:: HKiosk ::."
 echo " "
 
-XAUTHORITY=/tmp/.Xauthority KIOSK_URL=$LOADER_URL KIOSK_ROTATE=$ROTATE KIOSK_REFLECT=$REFLECT KIOSK_DEV=$DEV startx -- $NOCURSOR
+XAUTHORITY=/tmp/.Xauthority KIOSK_URL=$LOADER_URL KIOSK_ROTATE=$ROTATE KIOSK_REFLECT=$REFLECT KIOSK_DEV=$DEV KIOSK_EXTRA=$EXTRA startx -- $NOCURSOR
 logout

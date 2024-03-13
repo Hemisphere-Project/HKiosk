@@ -63,9 +63,14 @@ else
     KIOSK_ARG="--kiosk"
 fi
 
+# Extra flags
+if [ -n "$KIOSK_EXTRA" ]; then    
+    KIOSK_ARG="$KIOSK_ARG $KIOSK_EXTRA"
+fi
 
 chromium \
         --no-first-run \
+        --test-type \
         --start-maximized \
         --window-position=0,0 \
         --window-size=1920,1080 \
@@ -81,9 +86,11 @@ chromium \
         --disable-web-security \
         --disable-site-isolation-trials \
         --simulate-outdated-no-au='Tue, 31 Dec 2099 23:59:59 GMT' \
+        --ignore-certificate-errors \
         --disable-component-update \
         --noerrdialogs \
         --allow-browser-signin=false \
+        --overscroll-history-navigation=0 \
         --enable-offline-auto-reload \
         --enable-accelerated-video-decode \
         --enable-gpu-rasterization \
@@ -97,7 +104,7 @@ chromium \
         --user-data-dir="/tmp" \
         --autoplay-policy=no-user-gesture-required  \
         --enable-logging=stderr --v=1 --log-level=0 \
-        "$KIOSK_ARG" \
+        ${KIOSK_ARG} \
         "$KIOSK_URL" \
         > /data/var/chromium/log.txt 2>&1
 

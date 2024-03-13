@@ -75,19 +75,19 @@
         <br />
         <div id="url"></div>
         <br />
-        <div id="logger"><i class="c-inline-spinner"></i></div>
+        <div id="logger"></div>
     </div>
     
 
     <script>
-        var url = window.location.hash.substr(1)
-        
         function getStatus(url) 
         {
             if (url == "") {
                 document.getElementById("logger").innerHTML = "ERROR: No URL provided.."
                 return
             }
+
+            document.getElementById("logger").innerHTML = '<i class="c-inline-spinner"></i>' 
 
             
             var request = new XMLHttpRequest();
@@ -110,7 +110,7 @@
             request.send(null);
         }
 
-        getStatus(url)
+	    setInterval(() => { getStatus(window.location.hash.substr(1)) }, 2000)
     </script>
   </body>
 </html>

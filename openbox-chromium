@@ -80,7 +80,7 @@ chromium \
         --disable-suggestions-service \
         --disable-save-password-bubble \
         --disable-session-crashed-bubble \
-        --disable-features=OptimizationGuideModelDownloading,OptimizationHintsFetching,OptimizationTargetPrediction,OptimizationHints \
+        --disable-features=OptimizationGuideModelDownloading,OptimizationHintsFetching,OptimizationTargetPrediction,OptimizationHints,Translate \
         --deny-permission-prompts \
         --disable-search-geolocation-disclosure \
         --disable-web-security \

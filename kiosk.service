@@ -1,12 +1,14 @@
 [Unit]
 Description=Chromium Kiosk
 RequiresMountsFor=/run
+After=network-online.target		# Comment this if running local server
+Requires=network-online.target		# Comment this if running local server
            
 [Service]
 Type=simple
 User=root
 
-# ExecStartPre=/bin/sleep 3
+ExecStartPre=/opt/Pi-tools/datesync
 
 # Set --url <url> and other optional arguments in /boot/kiosk.url
 # kiosk --help to see other optional arguments

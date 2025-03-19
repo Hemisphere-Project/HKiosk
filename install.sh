@@ -11,7 +11,7 @@ if [[ $(command -v apt) ]]; then
     DISTRO='xbian'
     echo "Distribution: $DISTRO"
 
-    #  TODO
+    apt install chromium xserver-xorg x11-xserver-utils xinit openbox xdotool
 
     # RPi / RP64
     if [[ $(uname -m) = aarch64* || $(uname -m) = armv* ]]; then

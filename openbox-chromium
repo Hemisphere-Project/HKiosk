@@ -41,6 +41,7 @@ fi
 
 # FORCE 1080p
 xrandr -s 1920x1080
+# xrandr -s 1920x1080 -r 30
 
 # xrandr -o inverted
 # xinput set-prop 'ELAN Touchscreen' 'Coordinate Transformation Matrix' -1 0 1 0 -1 1 0 0 1

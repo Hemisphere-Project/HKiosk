@@ -95,6 +95,16 @@ fi
 mkdir -p "$PROFILE_DIR/Default"
 LOG="$PROFILE_DIR/log.txt"
 
+# Optional safety valve: drop the HTTP / code caches on boot so a stale page is
+# never served. Use when the server can't guarantee no-cache headers on the page
+# code. NB: this also re-fetches media on the next boot. The cleaner fix is to
+# serve the page with `Cache-Control: no-cache` (+ ETag) — then leave this off.
+if [ "$KIOSK_FRESH" = "1" ]; then
+    echo "KIOSK_FRESH: clearing browser cache"
+    rm -rf "$PROFILE_DIR/Default/Cache" "$PROFILE_DIR/Default/Code Cache" \
+           "$PROFILE_DIR/Default/GPUCache" "$PROFILE_DIR/GrShaderCache" 2>/dev/null
+fi
+
 # Clear the "Chrome didn't shut down correctly" / restore-pages prompt
 PREFS="$PROFILE_DIR/Default/Preferences"
 [ -f "$PREFS" ] && sed -i 's/"exited_cleanly":false/"exited_cleanly":true/; s/"exit_type":"[^"]\+"/"exit_type":"Normal"/' "$PREFS"

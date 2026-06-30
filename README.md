@@ -43,6 +43,7 @@ kiosk
     -m, --reflect <mode>     Reflect screen (n, x, y, xy)
     -s, --resolution <WxH>   Force resolution (e.g. 1920x1080), default auto
     -c, --nocursor           Hide cursor
+    -f, --fresh              Clear browser cache on boot (always-fresh page code)
     -d, --devtools           Show devtools (windowed)
     -e, --extra <args>       Extra chromium flags
     -h, --help               Show this help
@@ -84,6 +85,34 @@ is replaced with the device's Pi-tools drive id (`/data/var/drive-id`).
   forcing 1080p — pass `--resolution` only when you need to override it.
 - GPU rasterization, zero-copy and hardware video decode are enabled per platform
   (Intel VAAPI on x86, V4L2 on Pi). Check decode with `vainfo` on x86.
+
+## Caching & updates
+
+The persistent profile keeps a disk cache across reboots, so **what shows after a
+reboot is decided by your server's HTTP cache headers** (the browser cannot tell
+"code" from "media" — the headers do):
+
+- **Page code (HTML / JS / CSS):** serve with `Cache-Control: no-cache` (or
+  `no-store`). The browser then revalidates on every boot and never runs a stale
+  build. Avoid a long `max-age` / `Expires` on code — that is what serves
+  "rotting" code after a reboot.
+- **Media (images / video / audio):** serve with `Cache-Control: no-cache` too,
+  plus the usual `ETag` / `Last-Modified` (most servers add these automatically).
+  Unchanged media is then reused from cache (a small `304`, no re-download); media
+  replaced under the **same name** is re-fetched fresh.
+
+In short, `Cache-Control: no-cache` on everything gives you exactly: always-fresh
+code, cached-but-revalidated media. (Verified by relaunching Chromium against a
+test server: with `no-cache` a reboot picks up updated code and updated
+same-name media; with `max-age=3600` it served stale code.)
+
+If you **can't** control those headers, add `--fresh` (or `--fresh` in
+`kiosk.url`) to wipe the browser cache on each boot — guarantees fresh code at the
+cost of re-fetching media once per boot.
+
+> Heads-up: if your page registers a **service worker** (PWA/SPA), it can serve
+> its own cached code regardless of HTTP headers and survives reboots. Use a
+> network-first worker, or `--fresh`, to avoid serving an old app shell.
 
 ## Files
 

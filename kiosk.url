@@ -4,6 +4,7 @@
 # --reflect <mode>        Reflect screen (n, x, y, xy)
 # --resolution <WxH>      Force resolution (e.g. 1920x1080), default auto
 # --nocursor              Hide cursor
+# --fresh                 Clear browser cache on boot (always-fresh page code)
 # --devtools              Show devtools (disable fullscreen)
 # --extra "<flags>"       Extra chromium flags
 

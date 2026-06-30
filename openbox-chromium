@@ -1,21 +1,40 @@
-# Disable any form of screen saver / screen blanking / power management
+#!/bin/bash
+#
+# Openbox autostart — symlinked to /etc/xdg/openbox/autostart at install.
+# Configures the display (resolution / rotation / reflect) then launches the
+# browser in kiosk mode. Driven by KIOSK_* environment variables exported by
+# the `kiosk` launcher.
+#
+
+# ── Disable screen saver / blanking / power management ──
 xset s off
 xset s noblank
 xset -dpms
 
+# ── Resolution ──
+# KIOSK_RESOLUTION (e.g. 1920x1080) forces a mode, otherwise auto-detect the
+# monitor's native resolution. `--auto` is far more robust than forcing 1080p,
+# which fails on 4K / non-1080 panels.
+PRIMARY=$(xrandr | grep ' connected' | head -1 | cut -d ' ' -f1)
+if [ -n "$KIOSK_RESOLUTION" ]; then
+    xrandr -s "$KIOSK_RESOLUTION" || echo "WARN: could not set resolution $KIOSK_RESOLUTION"
+else
+    xrandr --auto
+fi
+
+# Touch pointer (exclude Pi vc4 and virtual devices)
 POINTER_XID=$(xinput -list | grep "pointer" | grep -v vc4 | grep -v "Virtual" | cut -f 2 | cut -d "=" -f 2)
 echo "POINTER_XID: $POINTER_XID"
 
-# Rotate
+# ── Rotate ──
 KIOSK_ROTATE=${KIOSK_ROTATE:-"0"}
-
-xrandr
+case "$KIOSK_ROTATE" in 0|90|180|270) ;; *) echo "WARN: invalid KIOSK_ROTATE '$KIOSK_ROTATE', using 0"; KIOSK_ROTATE="0" ;; esac
 
 if [ "$KIOSK_ROTATE" = "90" ]; then
     xrandr -o right
     xinput set-prop $POINTER_XID 'Coordinate Transformation Matrix' 0 1 0 -1 0 1 0 0 1
 elif [ "$KIOSK_ROTATE" = "180" ]; then
-    xrandr | grep ' connected' | cut -f 1 -d ' ' | while read display; do xrandr --output $display --set TearFree on; done
+    [ -n "$PRIMARY" ] && xrandr --output "$PRIMARY" --set TearFree on 2>/dev/null
     xrandr -o inverted
     xinput set-prop $POINTER_XID 'Coordinate Transformation Matrix' -1 0 1 0 -1 1 0 0 1
 elif [ "$KIOSK_ROTATE" = "270" ]; then
@@ -26,8 +45,10 @@ else # 0
     xinput set-prop $POINTER_XID 'Coordinate Transformation Matrix' 1 0 0 0 1 0 0 0 1
 fi
 
-# Flip
+# ── Reflect ──
 KIOSK_REFLECT=${KIOSK_REFLECT:-"n"}
+case "$KIOSK_REFLECT" in n|x|y|xy) ;; *) echo "WARN: invalid KIOSK_REFLECT '$KIOSK_REFLECT', using n"; KIOSK_REFLECT="n" ;; esac
+
 if [ "$KIOSK_REFLECT" = "x" ]; then
     xrandr -x
     xinput set-prop $POINTER_XID 'Coordinate Transformation Matrix' -1 0 1 0 1 0 0 0 1
@@ -39,74 +60,111 @@ elif [ "$KIOSK_REFLECT" = "xy" ]; then
     xinput set-prop $POINTER_XID 'Coordinate Transformation Matrix' -1 0 1 0 -1 1 0 0 1
 fi
 
-# FORCE 1080p
-xrandr -s 1920x1080
-# xrandr -s 1920x1080 -r 30
-
-# xrandr -o inverted
-# xinput set-prop 'ELAN Touchscreen' 'Coordinate Transformation Matrix' -1 0 1 0 -1 1 0 0 1
-# https://gist.github.com/mildmojo/48e9025070a2ba40795c
-
-# Allow quitting the X server with CTRL-ATL-Backspace
+# Allow quitting the X server with CTRL-ALT-Backspace
 setxkbmap -option terminate:ctrl_alt_bksp
 
-# Start Chromium in kiosk mode
-sed -i 's/\"exited_cleanly\":false/\"exited_cleanly\":true/' ~/.config/chromium/'Local State'
-sed -i 's/\"exited_cleanly\":false/\"exited_cleanly\":true/; s/\"exit_type\":\"[^\"]\+\"/\"exit_type\":\"Normal\"/' ~/.config/chromium/Default/Preferences
+xrandr
+
+# ── Pick the browser binary ──
+# Order prefers a real .deb: on Raspberry Pi OS that is chromium; on Ubuntu/x86
+# `apt install chromium` only provides a *snap* (broken --user-data-dir under
+# confinement), so install.sh deploys Google Chrome instead. Snap wrappers are
+# skipped. Override with KIOSK_BROWSER=/path/to/browser.
+BROWSER="$KIOSK_BROWSER"
+if [ -z "$BROWSER" ]; then
+    for b in google-chrome-stable google-chrome chromium chromium-browser; do
+        p=$(command -v "$b" 2>/dev/null) || continue
+        case "$p" in */snap/*) continue ;; esac
+        BROWSER="$p"; break
+    done
+fi
+if [ -z "$BROWSER" ]; then
+    echo "ERROR: no chromium / chrome browser found" >&2
+    exit 1
+fi
+echo "Browser: $BROWSER"
+
+# ── Profile / cache directory ──
+# Persistent on /data (survives reboots → warm disk cache → faster reloads).
+# Falls back to /tmp when there is no data partition.
+if [ -d /data ]; then
+    PROFILE_DIR=/data/var/chromium
+else
+    PROFILE_DIR=/tmp/chromium
+fi
+mkdir -p "$PROFILE_DIR/Default"
+LOG="$PROFILE_DIR/log.txt"
+
+# Clear the "Chrome didn't shut down correctly" / restore-pages prompt
+PREFS="$PROFILE_DIR/Default/Preferences"
+[ -f "$PREFS" ] && sed -i 's/"exited_cleanly":false/"exited_cleanly":true/; s/"exit_type":"[^"]\+"/"exit_type":"Normal"/' "$PREFS"
+LOCAL_STATE="$PROFILE_DIR/Local State"
+[ -f "$LOCAL_STATE" ] && sed -i 's/"exited_cleanly":false/"exited_cleanly":true/' "$LOCAL_STATE"
 
 KIOSK_URL=${KIOSK_URL:-"http://hemisphere-project.com"}
 
-# Toggle fullscreen kiosk or windowed mode with devtools
-KIOKS_ARG=""
+# Toggle fullscreen kiosk vs windowed mode with devtools
 if [ "$KIOSK_DEV" = "1" ]; then
-    KIOSK_ARG="--auto-open-devtools-for-tabs"
+    MODE_FLAG="--auto-open-devtools-for-tabs"
 else
-    KIOSK_ARG="--kiosk"
+    MODE_FLAG="--kiosk"
 fi
 
-# Extra flags
-if [ -n "$KIOSK_EXTRA" ]; then    
-    KIOSK_ARG="$KIOSK_ARG $KIOSK_EXTRA"
-fi
+# ── GPU / video acceleration (architecture dependent) ──
+DISABLE_FEATURES="OptimizationGuideModelDownloading,OptimizationHintsFetching,OptimizationTargetPrediction,OptimizationHints,Translate"
+case "$(uname -m)" in
+    x86_64|i686|i386)
+        # Intel iGPU (e.g. N150): VAAPI hardware video decode.
+        ENABLE_FEATURES="VaapiVideoDecoder,VaapiVideoDecodeLinuxGL,CanvasOopRasterization"
+        DISABLE_FEATURES="$DISABLE_FEATURES,UseChromeOSDirectVideoDecoder"
+        GPU_EXTRA=()
+        ;;
+    *)
+        # Raspberry Pi (V4L2 decode path).
+        ENABLE_FEATURES="CanvasOopRasterization,EnableDrDc"
+        GPU_EXTRA=(--enable-accelerated-video-decode --enable-unsafe-webgpu)
+        ;;
+esac
 
-chromium \
-        --no-first-run \
-        --test-type \
-        --start-maximized \
-        --window-position=0,0 \
-        --window-size=1920,1080 \
-        --disable \
-        --disable-translate \
-        --disable-infobars \
-        --disable-suggestions-service \
-        --disable-save-password-bubble \
-        --disable-session-crashed-bubble \
-        --disable-features=OptimizationGuideModelDownloading,OptimizationHintsFetching,OptimizationTargetPrediction,OptimizationHints,Translate \
-        --deny-permission-prompts \
-        --disable-search-geolocation-disclosure \
-        --disable-web-security \
-        --disable-site-isolation-trials \
-        --simulate-outdated-no-au='Tue, 31 Dec 2099 23:59:59 GMT' \
-        --ignore-certificate-errors \
-        --disable-component-update \
-        --noerrdialogs \
-        --allow-browser-signin=false \
-        --overscroll-history-navigation=0 \
-        --enable-offline-auto-reload \
-        --enable-accelerated-video-decode \
-        --enable-gpu-rasterization \
-        --enable-unsafe-webgpu \
-        --ignore-gpu-blocklist \
-        --enable-zero-copy \
-        --enable-features=CanvasOopRasterization,EnableDrDc \
-        --incognito \
-        --no-sandbox \
-        --test-type \
-        --user-data-dir="/tmp" \
-        --autoplay-policy=no-user-gesture-required  \
-        --enable-logging=stderr --v=1 --log-level=0 \
-        ${KIOSK_ARG} \
-        "$KIOSK_URL" \
-        > /data/var/chromium/log.txt 2>&1
+# ── Launch ──
+FLAGS=(
+    --no-first-run
+    --test-type
+    --start-maximized
+    --window-position=0,0
+    --disable-translate
+    --disable-infobars
+    --disable-suggestions-service
+    --disable-save-password-bubble
+    --disable-session-crashed-bubble
+    --disable-features="$DISABLE_FEATURES"
+    --enable-features="$ENABLE_FEATURES"
+    --deny-permission-prompts
+    --disable-search-geolocation-disclosure
+    --disable-web-security
+    --disable-site-isolation-trials
+    --simulate-outdated-no-au='Tue, 31 Dec 2099 23:59:59 GMT'
+    --ignore-certificate-errors
+    --disable-component-update
+    --noerrdialogs
+    --allow-browser-signin=false
+    --overscroll-history-navigation=0
+    --disable-pinch
+    --enable-offline-auto-reload
+    --enable-gpu-rasterization
+    --ignore-gpu-blocklist
+    --enable-zero-copy
+    --no-sandbox
+    --user-data-dir="$PROFILE_DIR"
+    --autoplay-policy=no-user-gesture-required
+    --enable-logging=stderr --log-level=1
+)
 
-
+# shellcheck disable=SC2086  # KIOSK_EXTRA is intentionally word-split
+"$BROWSER" \
+    "${FLAGS[@]}" \
+    "${GPU_EXTRA[@]}" \
+    $MODE_FLAG \
+    $KIOSK_EXTRA \
+    "$KIOSK_URL" \
+    > "$LOG" 2>&1

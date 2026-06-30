@@ -95,7 +95,7 @@
                 if (request.readyState === 4)
                 {
                     
-                    if (request.status == 200 || request.status == 301 || request.status == 304) {
+                    if (request.status >= 200 && request.status < 400) {
                         document.getElementById("logger").innerHTML = "OK"
                         window.location.href = url;
                     }

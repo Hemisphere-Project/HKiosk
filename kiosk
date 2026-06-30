@@ -10,11 +10,11 @@ DIR="$(dirname "$(readlink -f "$0")")"
 # DEFAULT CONFIG
 #
 URL="https://hemisphere-project.com"
-ROTATE="0"      # 0, 90, 180, 270
-REFLECT="n"     # n, x, y, xy
-WINDOW=0        # 0, 1  
-NOCURSOR=""     # "", -nocursor
-EXTRA=""        # ""
+ROTATE="0"         # 0, 90, 180, 270
+REFLECT="n"        # n, x, y, xy
+RESOLUTION=""      # "" = auto-detect, or e.g. 1920x1080
+NOCURSOR=""        # "", -nocursor
+EXTRA=""           # ""
 
 #
 # CMD LINE OVERWRITE
@@ -36,6 +36,11 @@ while [[ $# -gt 0 ]]; do
       shift # past argument
       shift # past value
       ;;
+    -s|--resolution)
+      RESOLUTION="$2"
+      shift # past argument
+      shift # past value
+      ;;
     -d|--devtools)
       DEV=1
       shift # past argument
@@ -53,15 +58,16 @@ while [[ $# -gt 0 ]]; do
       echo "Usage: kiosk [options]"
       echo " "
       echo "Options:"
-      echo "  -u, --url <url>        URL to load"
-      echo "  -r, --rotate <deg>     Rotate screen (0, 90, 180, 270)"
-      echo "  -m, --reflect <mode>   Reflect screen (n, x, y, xy)"
-      echo "  -c, --nocursor         Hide cursor"
-      echo "  -d, --devtools         Show devtools"
-      echo "  -e, --extra <args>     Extra chromium flags"
-      echo "  -h, --help             Show this help"
+      echo "  -u, --url <url>          URL to load"
+      echo "  -r, --rotate <deg>       Rotate screen (0, 90, 180, 270)"
+      echo "  -m, --reflect <mode>     Reflect screen (n, x, y, xy)"
+      echo "  -s, --resolution <WxH>   Force resolution (e.g. 1920x1080), default auto"
+      echo "  -c, --nocursor           Hide cursor"
+      echo "  -d, --devtools           Show devtools"
+      echo "  -e, --extra <args>       Extra chromium flags"
+      echo "  -h, --help               Show this help"
       echo " "
-      shift # past argument
+      exit 0
       ;;
     *)
       echo "Unknown argument $1"
@@ -73,20 +79,21 @@ done
 
 
 LOADER_URL=file://${DIR}/loader.html#${URL}
-# exit 0
-
-# echo $URL
-# echo $ROTATE
-# echo $REFLECT
-# echo $WINDOW
-# echo $NOCURSOR
-# echo $LOADER_URL
-
 
 #INFO
 echo " "
 echo ".:: HKiosk ::."
 echo " "
 
-XAUTHORITY=/tmp/.Xauthority KIOSK_URL=$LOADER_URL KIOSK_ROTATE=$ROTATE KIOSK_REFLECT=$REFLECT KIOSK_DEV=$DEV KIOSK_EXTRA=$EXTRA startx -- $NOCURSOR
+# /tmp must be world-writable for the X authority cookie (matters on read-only root)
+chmod 777 /tmp 2>/dev/null
+
+XAUTHORITY=/tmp/.Xauthority \
+KIOSK_URL=$LOADER_URL \
+KIOSK_ROTATE=$ROTATE \
+KIOSK_REFLECT=$REFLECT \
+KIOSK_RESOLUTION=$RESOLUTION \
+KIOSK_DEV=$DEV \
+KIOSK_EXTRA="$EXTRA" \
+    startx -- vt7 $NOCURSOR
 logout

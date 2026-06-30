@@ -1,21 +1,26 @@
 [Unit]
 Description=Chromium Kiosk
 RequiresMountsFor=/run
-After=network-online.target		# Comment this if running local server
-Requires=network-online.target		# Comment this if running local server
-           
+
+# Wait for network. Comment the next two lines out if you serve a LOCAL page
+# (no internet needed) so the kiosk starts faster / works offline.
+After=network-online.target
+Requires=network-online.target
+
 [Service]
 Type=simple
 User=root
 
-ExecStartPre=/opt/Pi-tools/datesync
+# Best-effort clock sync before launch (no-op if offline). Tolerant: a failure
+# here never blocks the kiosk from starting.
+ExecStartPre=-/bin/sh -c 'datesync 2>/dev/null || /opt/Pi-tools/datesync 2>/dev/null || true'
 
-# Set --url <url> and other optional arguments in /boot/kiosk.url
-# kiosk --help to see other optional arguments
-
-ExecStart=/bin/sh -c 'KIOSK_ARGS=$$(/usr/bin/grep -v "^#" /boot/kiosk.url | /usr/bin/tr "\n" " " | /usr/bin/sed -e "s/<mac>/$$(/usr/bin/cat /data/var/drive-id)/"); /usr/local/bin/kiosk $${KIOSK_ARGS}'
-ExecStop=/bin/pkill Xorg
+# Launch arguments come from kiosk.url on the boot partition
+# (/boot/firmware/kiosk.url on Raspberry Pi OS, /boot/kiosk.url on x86).
+# Run `kiosk --help` to see all options. <mac> is replaced by the drive id.
+ExecStart=/bin/sh -c 'F=/boot/firmware/kiosk.url; [ -f "$$F" ] || F=/boot/kiosk.url; KIOSK_ARGS=$$(/usr/bin/grep -v "^#" "$$F" | /usr/bin/tr "\n" " " | /usr/bin/sed -e "s/<mac>/$$(/bin/cat /data/var/drive-id 2>/dev/null)/"); exec /usr/local/bin/kiosk $${KIOSK_ARGS}'
+ExecStop=/usr/bin/pkill Xorg
 Restart=always
-           
+
 [Install]
 WantedBy=multi-user.target

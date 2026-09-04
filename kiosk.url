@@ -5,6 +5,7 @@
 # --resolution <WxH>      Force resolution (e.g. 1920x1080), default auto
 # --nocursor              Hide cursor
 # --fresh                 Clear browser cache on boot (always-fresh page code)
+# --capture               Pre-grant camera/mic for the page (HNdi NDI input)
 # --devtools              Show devtools (disable fullscreen)
 # --extra "<flags>"       Extra chromium flags
 

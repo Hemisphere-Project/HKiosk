@@ -170,10 +170,31 @@ FLAGS=(
     --enable-logging=stderr --log-level=1
 )
 
+# ── Camera / mic capture (HNdi NDI input) ──
+# With --capture, pre-grant getUserMedia for the kiosk page so an NDI (or camera)
+# feed can be pulled into a <video> with no permission prompt — even alongside
+# --deny-permission-prompts. See the HNdi project.
+CAPTURE_FLAGS=()
+if [ "$KIOSK_CAPTURE" = "1" ]; then
+    CAPTURE_FLAGS+=(--auto-accept-camera-and-microphone-capture)
+    # getUserMedia needs a secure context; an http:// (non-localhost) kiosk origin
+    # is treated as secure so capture works. The real target is after the loader '#'.
+    TARGET="${KIOSK_URL#*#}"
+    case "$TARGET" in
+        http://*)
+            ORIGIN=$(printf '%s' "$TARGET" | sed -E 's#^(http://[^/]+).*#\1#')
+            HOST=$(printf '%s' "$ORIGIN" | sed -E 's#^http://([^:/]+).*#\1#')
+            case "$HOST" in localhost|127.0.0.1|'') ;; *) CAPTURE_FLAGS+=(--unsafely-treat-insecure-origin-as-secure="$ORIGIN") ;; esac
+            ;;
+    esac
+    echo "Capture: getUserMedia pre-granted (${CAPTURE_FLAGS[*]})"
+fi
+
 # shellcheck disable=SC2086  # KIOSK_EXTRA is intentionally word-split
 "$BROWSER" \
     "${FLAGS[@]}" \
     "${GPU_EXTRA[@]}" \
+    "${CAPTURE_FLAGS[@]}" \
     $MODE_FLAG \
     $KIOSK_EXTRA \
     "$KIOSK_URL" \

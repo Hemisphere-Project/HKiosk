@@ -60,6 +60,21 @@ override with `KIOSK_BROWSER=/path/to/browser` if needed.
 kiosk -u https://wikipedia.org
 ```
 
+### Camera / NDI input
+
+`--capture` (or `--capture` in `kiosk.url`) pre-grants the camera/mic to the kiosk
+page, so a page can pull a live feed into a `<video>` with `getUserMedia` and **no
+permission prompt** — even though the kiosk runs with `--deny-permission-prompts`.
+This is what lets a box show an **NDI** feed via
+[HNdi](https://github.com/Hemisphere-Project/HNdi): HNdi exposes the NDI stream as a
+local V4L2 camera (`/dev/video10`), and the page grabs it. If the kiosk URL is a
+plain `http://` origin (not localhost), it is also marked as a secure context so
+capture is allowed.
+
+```
+kiosk -u https://drop.kxkm.net/p/<token> --capture
+```
+
 ### Service (start at boot)
 
 1. Edit **`<boot>/kiosk.url`** to set the URL and options

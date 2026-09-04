@@ -15,6 +15,7 @@ REFLECT="n"        # n, x, y, xy
 RESOLUTION=""      # "" = auto-detect, or e.g. 1920x1080
 NOCURSOR=""        # "", -nocursor
 FRESH=""           # "", 1 (clear browser cache on boot)
+CAPTURE=""         # "", 1 (pre-grant camera/mic for the kiosk page — HNdi)
 EXTRA=""           # ""
 
 #
@@ -54,6 +55,10 @@ while [[ $# -gt 0 ]]; do
       FRESH=1
       shift # past argument
       ;;
+    -C|--capture)
+      CAPTURE=1
+      shift # past argument
+      ;;
     -e|--extra)
       EXTRA="$2"
       shift # past argument
@@ -69,6 +74,7 @@ while [[ $# -gt 0 ]]; do
       echo "  -s, --resolution <WxH>   Force resolution (e.g. 1920x1080), default auto"
       echo "  -c, --nocursor           Hide cursor"
       echo "  -f, --fresh              Clear browser cache on boot (always-fresh code)"
+      echo "  -C, --capture            Pre-grant camera/mic for the page (HNdi NDI input)"
       echo "  -d, --devtools           Show devtools"
       echo "  -e, --extra <args>       Extra chromium flags"
       echo "  -h, --help               Show this help"
@@ -101,6 +107,7 @@ KIOSK_REFLECT=$REFLECT \
 KIOSK_RESOLUTION=$RESOLUTION \
 KIOSK_DEV=$DEV \
 KIOSK_FRESH=$FRESH \
+KIOSK_CAPTURE=$CAPTURE \
 KIOSK_EXTRA="$EXTRA" \
     startx -- vt7 $NOCURSOR
 logout

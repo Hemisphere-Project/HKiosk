@@ -111,6 +111,14 @@ PREFS="$PROFILE_DIR/Default/Preferences"
 LOCAL_STATE="$PROFILE_DIR/Local State"
 [ -f "$LOCAL_STATE" ] && sed -i 's/"exited_cleanly":false/"exited_cleanly":true/' "$LOCAL_STATE"
 
+# Drop Chrome's stale profile lock. SingletonLock is a symlink encoding
+# "<hostname>-<pid>"; when the hostname changed since the last run (golden
+# image cloned then `hostrename`d, e.g. hmini-001 -> kmini-00N) Chrome reads it
+# as "profile in use by another process on another computer" and exits
+# silently — the kiosk stays on a bare X root. Only one browser ever runs on
+# a kiosk box, so the lock carries no information here.
+rm -f "$PROFILE_DIR/SingletonLock" "$PROFILE_DIR/SingletonCookie" "$PROFILE_DIR/SingletonSocket" 2>/dev/null
+
 KIOSK_URL=${KIOSK_URL:-"http://hemisphere-project.com"}
 
 # Toggle fullscreen kiosk vs windowed mode with devtools

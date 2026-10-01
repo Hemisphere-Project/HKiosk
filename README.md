@@ -96,6 +96,8 @@ is replaced with the device's Pi-tools drive id (`/data/var/drive-id`).
 
 - A **persistent profile/cache** is kept on `/data/var/chromium` (or `/tmp` when
   there is no data partition), so a heavy web app reloads warm after a reboot.
+  Chrome's crash database lives there too (`Crash Reports/`, via
+  `BREAKPAD_DUMP_LOCATION`), so the browser starts on a read-only root.
 - Resolution defaults to the panel's **native mode** (`xrandr --auto`) instead of
   forcing 1080p — pass `--resolution` only when you need to override it.
 - GPU rasterization, zero-copy and hardware video decode are enabled per platform

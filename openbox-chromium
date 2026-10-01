@@ -119,6 +119,16 @@ LOCAL_STATE="$PROFILE_DIR/Local State"
 # a kiosk box, so the lock carries no information here.
 rm -f "$PROFILE_DIR/SingletonLock" "$PROFILE_DIR/SingletonCookie" "$PROFILE_DIR/SingletonSocket" 2>/dev/null
 
+# Crash database next to the profile. Chrome ignores --user-data-dir for it and
+# writes ~/.config/google-chrome/Crash Reports instead — on a read-only root
+# crashpad gets no database ("--database is required") and Chrome dies with a
+# SIGTRAP before any window, kiosk.service still `active` on a bare X. An empty
+# dir there is not enough either (crashpad must mkdir new/ pending/ completed/).
+# BREAKPAD_DUMP_LOCATION is Chrome's own override; it also keeps Chrome from
+# holding a file open on / (which blocks re-sealing the root `ro`).
+export BREAKPAD_DUMP_LOCATION="${BREAKPAD_DUMP_LOCATION:-$PROFILE_DIR/Crash Reports}"
+mkdir -p "$BREAKPAD_DUMP_LOCATION"
+
 KIOSK_URL=${KIOSK_URL:-"http://hemisphere-project.com"}
 
 # Toggle fullscreen kiosk vs windowed mode with devtools

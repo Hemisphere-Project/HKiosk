@@ -15,7 +15,7 @@ REFLECT="n"        # n, x, y, xy
 RESOLUTION=""      # "" = auto-detect, or e.g. 1920x1080
 NOCURSOR=""        # "", -nocursor
 FRESH=""           # "", 1 (clear browser cache on boot)
-CAPTURE=""         # "", 1 (pre-grant camera/mic for the kiosk page — HNdi)
+CAPTURE=""         # "", 1 (pre-grant camera/mic to every origin, not only the page — HNdi)
 EXTRA=""           # ""
 
 #
@@ -74,7 +74,8 @@ while [[ $# -gt 0 ]]; do
       echo "  -s, --resolution <WxH>   Force resolution (e.g. 1920x1080), default auto"
       echo "  -c, --nocursor           Hide cursor"
       echo "  -f, --fresh              Clear browser cache on boot (always-fresh code)"
-      echo "  -C, --capture            Pre-grant camera/mic for the page (HNdi NDI input)"
+      echo "  -C, --capture            Pre-grant camera/mic (HNdi NDI input) to EVERY origin,"
+      echo "                           not only --url: a global browser flag (see README)"
       echo "  -d, --devtools           Show devtools"
       echo "  -e, --extra <args>       Extra chromium flags"
       echo "  -h, --help               Show this help"

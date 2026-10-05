@@ -189,9 +189,12 @@ FLAGS=(
 )
 
 # ── Camera / mic capture (HNdi NDI input) ──
-# With --capture, pre-grant getUserMedia for the kiosk page so an NDI (or camera)
-# feed can be pulled into a <video> with no permission prompt — even alongside
+# With --capture, pre-grant getUserMedia so the kiosk page can pull an NDI (or
+# camera) feed into a <video> with no permission prompt — even alongside
 # --deny-permission-prompts. See the HNdi project.
+# The flag is GLOBAL: every origin the browser loads gets camera/mic, not only
+# the kiosk page, and a Chrome update can drop it (proven on Chrome 149). The
+# origin-scoped alternative is the VideoCaptureAllowedUrls policy. See README.
 CAPTURE_FLAGS=()
 if [ "$KIOSK_CAPTURE" = "1" ]; then
     CAPTURE_FLAGS+=(--auto-accept-camera-and-microphone-capture)

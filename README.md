@@ -44,6 +44,7 @@ kiosk
     -s, --resolution <WxH>   Force resolution (e.g. 1920x1080), default auto
     -c, --nocursor           Hide cursor
     -f, --fresh              Clear browser cache on boot (always-fresh page code)
+    -C, --capture            Pre-grant camera/mic to EVERY origin (see Camera / NDI input)
     -d, --devtools           Show devtools (windowed)
     -e, --extra <args>       Extra chromium flags
     -h, --help               Show this help
@@ -62,8 +63,8 @@ kiosk -u https://wikipedia.org
 
 ### Camera / NDI input
 
-`--capture` (or `--capture` in `kiosk.url`) pre-grants the camera/mic to the kiosk
-page, so a page can pull a live feed into a `<video>` with `getUserMedia` and **no
+`--capture` (or `--capture` in `kiosk.url`) pre-grants the camera/mic, so the kiosk
+page can pull a live feed into a `<video>` with `getUserMedia` and **no
 permission prompt** — even though the kiosk runs with `--deny-permission-prompts`.
 This is what lets a box show an **NDI** feed via
 [HNdi](https://github.com/Hemisphere-Project/HNdi): HNdi exposes the NDI stream as a
@@ -74,6 +75,24 @@ capture is allowed.
 ```
 kiosk -u https://drop.kxkm.net/p/<token> --capture
 ```
+
+**What `--capture` widens — read before enabling it.** It launches the browser
+with `--auto-accept-camera-and-microphone-capture`, and that flag is **global**:
+*every* origin the browser loads gets the camera and mic, not only the kiosk
+URL — on a browser that already runs with `--disable-web-security`. That is
+acceptable for what the option is for — one fixed page you control, ideally on
+a closed LAN, enabled box by box — and not on a box that navigates freely or
+embeds third-party content.
+
+It is also a command-line flag, not a supported interface, so a browser update
+can drop it. It was proven on Google Chrome 149 / Ubuntu 25.10 (x86) in
+September 2026, and on x86 Chrome comes from Google's apt repo, so an
+`apt upgrade` can move it (`--disable-component-update` does not stop apt).
+**If the camera goes black after a browser update, suspect the flag first.**
+The origin-scoped alternative is Chrome's enterprise policy
+`VideoCaptureAllowedUrls` / `AudioCaptureAllowedUrls`. It was not used because
+it needs a policy JSON on disk where the browser reads it, which a read-only
+root makes awkward — and it has not been tested with HKiosk.
 
 ### Service (start at boot)
 
